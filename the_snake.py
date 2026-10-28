@@ -33,6 +33,10 @@ TURNS = {
     (DOWN, pg.K_RIGHT): RIGHT,
 }
 
+# Голова может столкнуться только с сегментами, начиная с пятого:
+# наименьшее кольцо на сетке — квадрат 2×2.
+FIRST_REACHABLE_SEGMENT = 4
+
 # Цвет фона - черный:
 BOARD_BACKGROUND_COLOR = (0, 0, 0)
 
@@ -132,17 +136,18 @@ class Snake(GameObject):
     def __init__(self, body_color=SNAKE_COLOR):
         super().__init__(body_color)
         self.speed = SPEED
-        self.reset(RIGHT)
+        self.reset()
+        self.direction = RIGHT
 
-    def reset(self, direction=None):
+    def reset(self):
         """Возвращает змейку в начальное состояние в центре поля.
 
-        Если направление не передано, оно выбирается случайно.
+        Направление движения выбирается случайно.
         """
         self.position = SCREEN_CENTER
         self.length = 1
         self.positions = [self.position]
-        self.direction = direction or choice(DIRECTIONS)
+        self.direction = choice(DIRECTIONS)
         self.last = None
 
     def update_direction(self, direction):
@@ -228,11 +233,12 @@ def main():
         if not handle_keys(snake):
             break
         snake.move()
+        head = snake.get_head_position()
 
-        if snake.get_head_position() == apple.position:
+        if head == apple.position:
             snake.length += 1
             apple.randomize_position(snake.positions)
-        elif snake.get_head_position() in snake.positions[1:]:
+        elif head in snake.positions[FIRST_REACHABLE_SEGMENT:]:
             snake.reset()
             screen.fill(BOARD_BACKGROUND_COLOR)
             apple.randomize_position(snake.positions)
